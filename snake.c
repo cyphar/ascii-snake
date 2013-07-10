@@ -49,7 +49,7 @@
 
 #define SNAKE_WRAP	true	/* screen wrapping */
 #define SPEED		0.08	/* refresh rate (in seconds) */
-#define BONUS_CHANCE	100	/* chance of 1/CHANCE for bonus to appear */
+#define BONUS_CHANCE	400	/* chance of 1/CHANCE for bonus to appear */
 
 #define BONUS_MIN_TIME	30	/* lower range of lifespan of bonus */
 #define BONUS_MAX_TIME	120	/* upper range of lifespan of bonus*/
@@ -76,8 +76,8 @@
 #define ANSI_WHITE	"\x1b[1;37m"
 #define ANSI_CLEAR	"\x1b[0m"
 
-#define SCORE_FORMAT	"Score: " ANSI_WHITE "%d" ANSI_CLEAR
-#define TIMER_FORMAT	"Timer: " ANSI_RED "%d" ANSI_CLEAR
+#define SCORE_FORMAT	"Score: " ANSI_BLUE   "%d" ANSI_CLEAR
+#define TIMER_FORMAT	"Timer: " ANSI_YELLOW "%d" ANSI_CLEAR
 
 /* for positions, (x, y)*/
 #define X 0
