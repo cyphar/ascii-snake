@@ -141,7 +141,7 @@ void snake_init(void) {
 		snake_body[i] = malloc(2 * sizeof(int));
 
 		/* set default position */
-		snake_body[i][X] = snake_head[X] - (i + 1);
+		snake_body[i][X] = snake_head[X] - i;
 		snake_body[i][Y] = snake_head[Y];
 	}
 } /* snake_init() */
