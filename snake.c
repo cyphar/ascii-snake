@@ -29,12 +29,6 @@
 #include <unistd.h>
 #include <time.h>
 
-/* for killing input process */
-#include <signal.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
 /* for unbuffered input */
 #include <termios.h>
 #include <fcntl.h>
