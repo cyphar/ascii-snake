@@ -45,9 +45,29 @@
 #	define bool int
 #endif
 
-/* options */
-#define SNAKE_WRAP	true /* screen wrapping */
-#define SPEED		0.08 /* refresh rate (in seconds) */
+/* OPTIONS (CHANGE THIS BIT) */
+
+#define SNAKE_WRAP	true	/* screen wrapping */
+#define SPEED		0.08	/* refresh rate (in seconds) */
+#define BONUS_CHANCE	100	/* chance of 1/CHANCE for bonus to appear */
+
+#define BONUS_MIN_TIME	30	/* lower range of lifespan of bonus */
+#define BONUS_MAX_TIME	120	/* upper range of lifespan of bonus*/
+
+#define START_SNAKE_LEN	5	/* the beginning length of the snake */
+
+#define SNAKE_BODY	'*'	/* char representing the snake's body */
+#define SNAKE_HEAD	'x'	/* char representing the snake's head */
+#define FOOD		'@'	/* char representing food */
+#define BONUS		'$'	/* char representing */
+
+#define FOOD_SCORE	1	/* score increase when snake eats food */
+#define BONUS_SCORE	10	/* score increase when snake eats bonus */
+
+#define SCREEN_WIDTH	120	/* the virtual screen width */
+#define SCREEN_HEIGHT	40	/* the virtual screen height */
+
+/* END OPTIONS (the rest is more dev stuff ) */
 
 #define ANSI_RED	"\x1b[1;31m"
 #define ANSI_GREEN	"\x1b[1;32m"
@@ -56,14 +76,8 @@
 #define ANSI_WHITE	"\x1b[1;37m"
 #define ANSI_CLEAR	"\x1b[0m"
 
-#define SNAKE_BODY	'*'
-#define SNAKE_HEAD	'x'
-#define FOOD		'@'
-
 #define SCORE_FORMAT	"Score: " ANSI_WHITE "%d" ANSI_CLEAR
-
-#define SCREEN_WIDTH	120
-#define SCREEN_HEIGHT	40
+#define TIMER_FORMAT	"Timer: " ANSI_RED "%d" ANSI_CLEAR
 
 /* for positions, (x, y)*/
 #define X 0
@@ -74,7 +88,7 @@ int quit = false;
 char **game_state = NULL; /* stores the string of the current game state */
 
 /* snake */
-int snake_len = 5;
+int snake_len;
 int snake_head[2]; /* position of head */
 int **snake_body = NULL; /* position of all body parts */
 
@@ -90,6 +104,8 @@ int snake_direction = right;
 /* food / score */
 int score;
 int food[2]; /* (x, y) of current food position */
+int bonus[2]; /* (x, y) of current bonus position */
+int timer;
 
 char getch(void) {
 	char ch;
@@ -121,23 +137,15 @@ void snake_init(void) {
 
 	/* set defaults */
 	score = 0;
-	snake_len = 5;
+
+	/* snake */
+	snake_len = START_SNAKE_LEN;
 	snake_head[X] =  SCREEN_WIDTH / 2;
 	snake_head[Y] = SCREEN_HEIGHT / 2;
-	food[X] = snake_rand(0,  SCREEN_WIDTH);
-	food[Y] = snake_rand(0, SCREEN_HEIGHT);
 
-	/* allocate all the things */
-	int i;
-
-	game_state = calloc(SCREEN_HEIGHT * SCREEN_WIDTH, sizeof(char *));
-	for(i = 0; i < SCREEN_WIDTH; i++) {
-		game_state[i] = calloc(SCREEN_WIDTH + 1, 1);
-		game_state[i][SCREEN_WIDTH] = '\0';
-	}
-
-	/* snake body */
 	snake_body = malloc(snake_len * sizeof(int *));
+
+	int i;
 	for(i = 0; i < snake_len; i++) {
 		snake_body[i] = malloc(2 * sizeof(int));
 
@@ -145,6 +153,22 @@ void snake_init(void) {
 		snake_body[i][X] = snake_head[X] - i;
 		snake_body[i][Y] = snake_head[Y];
 	}
+
+	/* food and bonus */
+	food[X] = snake_rand(0,  SCREEN_WIDTH);
+	food[Y] = snake_rand(0, SCREEN_HEIGHT);
+
+	bonus[X] = -1;
+	bonus[Y] = -1;
+	timer = -1;
+
+	/* game state */
+	game_state = calloc(SCREEN_HEIGHT * SCREEN_WIDTH, sizeof(char *));
+	for(i = 0; i < SCREEN_WIDTH; i++) {
+		game_state[i] = calloc(SCREEN_WIDTH + 1, 1);
+		game_state[i][SCREEN_WIDTH] = '\0';
+	}
+
 } /* snake_init() */
 
 void snake_input(void) {
@@ -156,7 +180,7 @@ void snake_input(void) {
 
 	fcntl(0, F_SETFL, old);
 
-	/* wait 0.025 seconds */
+	/* wait SPEED seconds */
 	usleep(SPEED * 1000000L);
 
 	/* 'normal' input switch */
@@ -253,7 +277,7 @@ int in_snake(int x, int y) {
 			return true;
 
 	return false;
-}
+} /* in_snake() */
 
 void snake_update(void) {
 	/* first, update snake head */
@@ -304,8 +328,8 @@ void snake_update(void) {
 	/* check if food has been eaten */
 	if(snake_head[X] == food[X] &&
 	   snake_head[Y] == food[Y]) {
-		/* iterate score */
-		score++;
+		/* update score */
+		score += FOOD_SCORE;
 
 		/* reallocate body */
 		snake_body = realloc(snake_body, (snake_len + 1) * sizeof(int *));
@@ -322,7 +346,46 @@ void snake_update(void) {
 		do {
 			food[X] = snake_rand(0,  SCREEN_WIDTH - 1);
 			food[Y] = snake_rand(0, SCREEN_HEIGHT - 1);
-		} while(in_snake(food[X], food[Y]));
+		} while(in_snake(food[X], food[Y]) || (food[X] == bonus[X] && food[Y] == bonus[Y]));
+	}
+
+	/* if snake eats bonus */
+	if(snake_head[X] == bonus[X] &&
+	   snake_head[Y] == bonus[Y]) {
+		/* update score */
+		score += BONUS_SCORE;
+
+		/* delete bonus */
+		bonus[X] = -1;
+		bonus[Y] = -1;
+		timer = -1;
+	}
+
+	/* updating bonus */
+	if(bonus[X] >= 0 &&
+	   bonus[Y] >= 0) {
+		/* decrement bonus timer */
+		timer--;
+
+		/* if time has run out, remove bonus food */
+		if(!timer) {
+			bonus[X] = -1;
+			bonus[Y] = -1;
+			timer = -1;
+		}
+
+	} else {
+		/* no bonus -- randomly generate */
+		if(snake_rand(0, BONUS_CHANCE) == BONUS_CHANCE / 2) {
+			/* add bonus */
+			do {
+				bonus[X] = snake_rand(0,  SCREEN_WIDTH - 1);
+				bonus[Y] = snake_rand(0, SCREEN_HEIGHT - 1);
+			} while(in_snake(bonus[X], bonus[Y]) || (bonus[X] == food[X] && bonus[Y] == food[Y]));
+
+			/* set timer */
+			timer = snake_rand(BONUS_MIN_TIME, BONUS_MAX_TIME);
+		}
 	}
 
 	shift_snake();
@@ -350,24 +413,51 @@ void snake_update(void) {
 	/* add food */
 	x = food[X];
 	y = food[Y];
-	game_state[y][x] = FOOD;
+	if(x >= 0 && y >= 0)
+		game_state[y][x] = FOOD;
+
+	/* add bonus */
+	x = bonus[X];
+	y = bonus[Y];
+	if(x >= 0 && y >= 0)
+		game_state[y][x] = BONUS;
 
 	/* add snake head */
 	x = snake_head[X];
 	y = snake_head[Y];
-	game_state[y][x] = SNAKE_HEAD;
+	if(x >= 0 && y >= 0)
+		game_state[y][x] = SNAKE_HEAD;
 } /* snake_update() */
+
+void clr_line(void) {
+	printf("\x1b[s"); /* save current cursor position */
+	printf("%*s", SCREEN_WIDTH, ""); /* blank out virual screen */
+	printf("\x1b[u"); /* move cursor back to saved position */
+
+	fflush(stdout);
+} /* clr_line() */
 
 void snake_redraw(void) {
 	/* move virtual cursor to top left */
 	printf("\x1b[H");
 	fflush(stdout);
 
+	/* print game state */
 	int i;
 	for(i = 0; i < SCREEN_HEIGHT; i++)
 		printf("%s\n", game_state[i]);
 
+	/* print score */
+	clr_line();
 	printf("\n" SCORE_FORMAT "\n", score);
+
+	/* if a timer exists, print it */
+	if(timer >= 0) {
+		clr_line();
+		printf(TIMER_FORMAT "\n", timer);
+	}
+
+	clr_line();
 } /* snake_redraw() */
 
 int main(void) {
