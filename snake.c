@@ -67,6 +67,10 @@
 #define SCREEN_WIDTH	120	/* the virtual screen width */
 #define SCREEN_HEIGHT	40	/* the virtual screen height */
 
+#define BORDER_CORNER	'+'	/* character at corners of border */
+#define BORDER_VERT	'|'	/* character for vertical border */
+#define BORDER_HORI	'-'	/* character for horizontal border */
+
 /* END OPTIONS (the rest is more dev stuff ) */
 
 #define ANSI_RED	"\x1b[1;31m"
@@ -86,6 +90,7 @@
 /* global states */
 int quit = false;
 char **game_state = NULL; /* stores the string of the current game state */
+char *border = NULL;
 
 /* snake */
 int snake_len;
@@ -169,6 +174,13 @@ void snake_init(void) {
 		game_state[i][SCREEN_WIDTH] = '\0';
 	}
 
+	/* border */
+	border = calloc(SCREEN_WIDTH + 3, 1);
+
+	for(i = 0; i < SCREEN_WIDTH; i++)
+		border[i + 1] = BORDER_HORI;
+
+	border[0] = border[SCREEN_WIDTH + 1] = BORDER_CORNER;
 } /* snake_init() */
 
 void snake_input(void) {
@@ -442,10 +454,16 @@ void snake_redraw(void) {
 	printf("\x1b[H");
 	fflush(stdout);
 
+	/* top border */
+	printf("%s\n", border);
+
 	/* print game state */
 	int i;
 	for(i = 0; i < SCREEN_HEIGHT; i++)
-		printf("%s\n", game_state[i]);
+		printf("%c%s%c\n", BORDER_VERT, game_state[i], BORDER_VERT);
+
+	/* bottom border */
+	printf("%s\n", border);
 
 	/* print score */
 	clr_line();
@@ -488,5 +506,6 @@ int main(void) {
 	for(i = 0; i < snake_len; i++)
 		free(snake_body[i]);
 	free(snake_body);
+	free(border);
 	return 0;
 }
