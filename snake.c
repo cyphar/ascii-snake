@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+#define _BSD_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -35,12 +37,17 @@
 
 /* for unbuffered input */
 #include <termios.h>
+#include <fcntl.h>
 
 #if !defined(bool)
 #	define true 1
 #	define false 0
 #	define bool int
 #endif
+
+/* options */
+#define SNAKE_WRAP	true /* screen wrapping */
+#define SPEED		0.08 /* refresh rate (in seconds) */
 
 #define ANSI_RED	"\x1b[1;31m"
 #define ANSI_GREEN	"\x1b[1;32m"
@@ -49,16 +56,10 @@
 #define ANSI_WHITE	"\x1b[1;37m"
 #define ANSI_CLEAR	"\x1b[0m"
 
-#define SNAKE_WRAP	true
 #define SNAKE_BODY	'*'
 #define SNAKE_HEAD	'x'
 #define FOOD		'@'
 
-/*
-#define SNAKE_BODY	ANSI_WHITE  "*" ANSI_WHITE
-#define SNAKE_HEAD	ANSI_BLUE   "x" ANSI_CLEAR
-#define FOOD		ANSI_RED    "@" ANSI_CLEAR
-*/
 #define SCORE_FORMAT	"Score: " ANSI_WHITE "%d" ANSI_CLEAR
 
 #define SCREEN_WIDTH	120
@@ -147,8 +148,19 @@ void snake_init(void) {
 } /* snake_init() */
 
 void snake_input(void) {
-	int ch = getch(), weird = false;
+	/* get non-blocking input */
+	int old = fcntl(0, F_GETFL);
+	fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
 
+	int ch = getch();
+
+	fcntl(0, F_SETFL, old);
+
+	/* wait 0.025 seconds */
+	usleep(SPEED * 1000000L);
+
+	/* 'normal' input switch */
+	int weird = false;
 	switch(ch) {
 		case 'q':
 		case 'Q':
