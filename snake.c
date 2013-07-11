@@ -186,9 +186,6 @@ void snake_input(void) {
 
 	fcntl(0, F_SETFL, old);
 
-	/* wait SPEED seconds */
-	usleep(SPEED * 1000000L);
-
 	/* 'normal' input switch */
 	int weird = false;
 	switch(ch) {
@@ -486,6 +483,9 @@ int main(void) {
 		snake_input();  /* get input */
 		snake_update(); /* update game state */
 		snake_redraw(); /* redraw screen */
+
+		/* wait SPEED seconds */
+		usleep(SPEED * 1000000L);
 	}
 
 	/* game over */
