@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* for seeding randomness */
 #include <unistd.h>
@@ -469,6 +470,11 @@ void snake_redraw(void) {
 	clr_line();
 } /* snake_redraw() */
 
+void move_cursor(int row, int column) {
+	printf("\x1b[%d;%df", row, column);
+	fflush(stdout);
+} /* snake_redraw() */
+
 int main(void) {
 	/* clear screen */
 	printf("\x1b[H\x1b[2J");
@@ -489,7 +495,13 @@ int main(void) {
 	}
 
 	/* game over */
-	printf(ANSI_RED "Game Over!\n" ANSI_CLEAR);
+	char *msg = "Game Over!";
+
+	move_cursor((SCREEN_HEIGHT / 2) + 1, (SCREEN_WIDTH / 2) - (strlen(msg) / 2));
+	printf("  %s%s%s\n", ANSI_RED, msg, ANSI_CLEAR);
+
+	fflush(stdout);
+
 
 	/* free memory */
 	int i;
@@ -501,5 +513,7 @@ int main(void) {
 		free(snake_body[i]);
 	free(snake_body);
 	free(border);
+
+	move_cursor(SCREEN_HEIGHT + 6, 0); /* move to default, screen_height + borders + spaces for score, etc. */
 	return 0;
 }
