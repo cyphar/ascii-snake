@@ -52,7 +52,13 @@
 #define START_SNAKE_LEN	5	/* the beginning length of the snake */
 
 #define SNAKE_BODY	'*'	/* char representing the snake's body */
-#define SNAKE_HEAD	'x'	/* char representing the snake's head */
+
+/* chars representing the snake head, when facing a direction  */
+#define SNAKE_HEAD_U	'v'	/* up */
+#define SNAKE_HEAD_D	'^'	/* down */
+#define SNAKE_HEAD_L	'>'	/* left */
+#define SNAKE_HEAD_R	'<'	/* right  */
+
 #define FOOD		'@'	/* char representing food */
 #define BONUS		'$'	/* char representing */
 
@@ -429,8 +435,24 @@ void snake_update(void) {
 	/* add snake head */
 	x = snake_head[X];
 	y = snake_head[Y];
-	if(x >= 0 && y >= 0)
-		game_state[y][x] = SNAKE_HEAD;
+	if(x >= 0 && y >= 0) {
+		char head = 'X';
+		switch(snake_direction) {
+			case up:
+				head = SNAKE_HEAD_U;
+				break;
+			case down:
+				head = SNAKE_HEAD_D;
+				break;
+			case left:
+				head = SNAKE_HEAD_L;
+				break;
+			case right:
+				head = SNAKE_HEAD_R;
+				break;
+		}
+		game_state[y][x] = head;
+	}
 } /* snake_update() */
 
 void clr_line(void) {
@@ -497,9 +519,8 @@ int main(void) {
 	/* game over */
 	char *msg = "Game Over!";
 
-	move_cursor((SCREEN_HEIGHT / 2) + 1, (SCREEN_WIDTH / 2) - (strlen(msg) / 2));
-	printf("  %s%s%s\n", ANSI_RED, msg, ANSI_CLEAR);
-
+	move_cursor((SCREEN_HEIGHT / 2) + 3, (SCREEN_WIDTH / 2) - (strlen(msg) / 2));
+	printf("%s%s%s", ANSI_RED, msg, ANSI_CLEAR);
 	fflush(stdout);
 
 
