@@ -114,21 +114,27 @@ int bonus[2]; /* (x, y) of current bonus position */
 int timer;
 
 char getch(void) {
-	char ch;
 	static struct termios old, new;
 
-	tcgetattr(0, &old); /* grab old terminal i/o settings */
-	new = old; /* make new settings same as old settings */
-	new.c_lflag &= ~ICANON; /* disable buffered i/o */
-	new.c_lflag &= ~ECHO; /* set echo mode */
-	tcsetattr(0, TCSANOW, &new); /* use these new terminal i/o settings now */
+	/* get old settings */
+	tcgetattr(0, &old);
+	new = old;
 
-	ch = getchar();
-	tcsetattr(0, TCSANOW, &old); /* reset terminal i/o settings */
+	/* disable buffered i/o and echo */
+	new.c_lflag &= ~ICANON;
+	new.c_lflag &= ~ECHO;
+
+	/* set new terminal settings */
+	tcsetattr(0, TCSANOW, &new);
+
+	/* get char and reset terminal settings */
+	char ch = getchar();
+	tcsetattr(0, TCSANOW, &old);
 
 	/* if ctrl-c was pressed, exit */
 	if(ch == 3)
 		exit(2);
+
 	return ch;
 } /* getch_() */
 
@@ -522,7 +528,6 @@ int main(void) {
 	move_cursor((SCREEN_HEIGHT / 2) + 3, (SCREEN_WIDTH / 2) - (strlen(msg) / 2));
 	printf("%s%s%s", ANSI_RED, msg, ANSI_CLEAR);
 	fflush(stdout);
-
 
 	/* free memory */
 	int i;
