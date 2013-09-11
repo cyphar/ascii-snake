@@ -42,8 +42,8 @@
 
 /* OPTIONS (CHANGE THIS BIT) */
 
-#define SNAKE_WRAP	true	/* screen wrapping */
-#define SPEED		0.08	/* refresh rate (in seconds) */
+#define SNAKE_WRAP		true	/* screen wrapping */
+#define SPEED			0.08	/* refresh rate (in seconds) */
 #define BONUS_CHANCE	400	/* chance of 1/CHANCE for bonus to appear */
 
 #define BONUS_MIN_TIME	30	/* lower range of lifespan of bonus */
@@ -51,7 +51,7 @@
 
 #define START_SNAKE_LEN	5	/* the beginning length of the snake */
 
-#define SNAKE_BODY	'*'	/* char representing the snake's body */
+#define SNAKE_BODY		'*'	/* char representing the snake's body */
 
 /* chars representing the snake head, when facing a direction  */
 #define SNAKE_HEAD_U	'v'	/* up */
@@ -59,27 +59,27 @@
 #define SNAKE_HEAD_L	'>'	/* left */
 #define SNAKE_HEAD_R	'<'	/* right  */
 
-#define FOOD		'@'	/* char representing food */
-#define BONUS		'$'	/* char representing */
+#define FOOD			'@'	/* char representing food */
+#define BONUS			'$'	/* char representing */
 
-#define FOOD_SCORE	1	/* score increase when snake eats food */
-#define BONUS_SCORE	10	/* score increase when snake eats bonus */
+#define FOOD_SCORE		1	/* score increase when snake eats food */
+#define BONUS_SCORE		10	/* score increase when snake eats bonus */
 
-#define SCREEN_WIDTH	120	/* the virtual screen width */
-#define SCREEN_HEIGHT	40	/* the virtual screen height */
+#define SCREEN_WIDTH	30	/* the virtual screen width */
+#define SCREEN_HEIGHT	20	/* the virtual screen height */
 
 #define BORDER_CORNER	'+'	/* character at corners of border */
-#define BORDER_VERT	'|'	/* character for vertical border */
-#define BORDER_HORI	'-'	/* character for horizontal border */
+#define BORDER_VERT		'|'	/* character for vertical border */
+#define BORDER_HORI		'-'	/* character for horizontal border */
 
 /* END OPTIONS (the rest is more dev stuff ) */
 
-#define ANSI_RED	"\x1b[1;31m"
-#define ANSI_GREEN	"\x1b[1;32m"
-#define ANSI_YELLOW	"\x1b[1;33m"
-#define ANSI_BLUE	"\x1b[1;34m"
-#define ANSI_WHITE	"\x1b[1;37m"
-#define ANSI_CLEAR	"\x1b[0m"
+#define ANSI_RED		"\x1b[1;31m"
+#define ANSI_GREEN		"\x1b[1;32m"
+#define ANSI_YELLOW		"\x1b[1;33m"
+#define ANSI_BLUE		"\x1b[1;34m"
+#define ANSI_WHITE		"\x1b[1;37m"
+#define ANSI_CLEAR		"\x1b[0m"
 
 #define SCORE_FORMAT	"Score: " ANSI_BLUE   "%d" ANSI_CLEAR
 #define TIMER_FORMAT	"Timer: " ANSI_YELLOW "%d" ANSI_CLEAR
@@ -88,7 +88,14 @@
 #define X 0
 #define Y 1
 
+#define IS_SNAKE(ch) (ch == SNAKE_BODY || ch == SNAKE_HEAD_U || ch == SNAKE_HEAD_D || ch == SNAKE_HEAD_L || ch == SNAKE_HEAD_R)
+
 /* global states */
+enum {
+	win,
+	loss
+};
+
 int quit = false;
 char **game_state = NULL; /* stores the string of the current game state */
 char *border = NULL;
@@ -167,8 +174,8 @@ void snake_init(void) {
 	}
 
 	/* food and bonus */
-	food[X] = snake_rand(0,  SCREEN_WIDTH);
-	food[Y] = snake_rand(0, SCREEN_HEIGHT);
+	food[X] = snake_rand(0,  SCREEN_WIDTH - 1);
+	food[Y] = snake_rand(0, SCREEN_HEIGHT - 1);
 
 	bonus[X] = -1;
 	bonus[Y] = -1;
@@ -498,6 +505,17 @@ void snake_redraw(void) {
 	clr_line();
 } /* snake_redraw() */
 
+int snake_end_state(void) {
+	int x, y;
+
+	for(y = 0; y < SCREEN_HEIGHT; y++)
+		for(x = 0; x < SCREEN_WIDTH; x++)
+			if(!IS_SNAKE(game_state[y][x]))
+				return loss;
+
+	return win;
+} /* snake_end_state() */
+
 void move_cursor(int row, int column) {
 	printf("\x1b[%d;%df", row, column);
 	fflush(stdout);
@@ -522,10 +540,21 @@ int main(void) {
 		usleep(SPEED * 1000000L);
 	}
 
-	/* game over */
-	char *msg = "Game Over!";
+	/* end game */
+	char *msg = NULL;
+	int end_state = snake_end_state();
 
-	move_cursor((SCREEN_HEIGHT / 2) + 3, (SCREEN_WIDTH / 2) - (strlen(msg) / 2));
+	switch(end_state) {
+		case win:
+			msg = "You Won!";
+			break;
+		case loss:
+		default:
+			msg = "Game Over!";
+			break;
+	}
+
+	move_cursor((SCREEN_HEIGHT / 2) + 2, (SCREEN_WIDTH / 2) - (strlen(msg) / 2) + 2);
 	printf("%s%s%s", ANSI_RED, msg, ANSI_CLEAR);
 	fflush(stdout);
 
