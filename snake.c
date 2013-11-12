@@ -569,6 +569,6 @@ int main(void) {
 	free(snake_body);
 	free(border);
 
-	move_cursor(SCREEN_HEIGHT + 6, 0); /* move to default, screen_height + borders + spaces for score, etc. */
+	move_cursor(SCREEN_HEIGHT + 5 + (timer >= 0), 0); /* move to default, screen_height + borders + spaces for score, etc. */
 	return 0;
 }
