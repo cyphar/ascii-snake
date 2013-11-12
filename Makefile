@@ -1,8 +1,8 @@
 CC ?= gcc
 NAME = snake
 
-WARN = -Wall -Wextra -Werror -pedantic
-CFLAGS = -std=c99
+WARN = -ansi -Wall -Wextra -Werror
+CFLAGS =
 LFLAGS =
 
 SRC = snake.c
