@@ -12,3 +12,6 @@ $(NAME): $(SRC)
 
 debug: $(SRC)
 	$(CC) $(CFLAGS) $(SRC) $(LFLAGS) $(WARN) -o $(NAME) -g -O0
+
+clean: $(NAME)
+	rm $(NAME)
