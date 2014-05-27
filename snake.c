@@ -84,7 +84,7 @@
 #define SCORE_FORMAT	"Score: " ANSI_BLUE   "%d" ANSI_CLEAR
 #define TIMER_FORMAT	"Timer: " ANSI_YELLOW "%d" ANSI_CLEAR
 
-/* for positions, (x, y)*/
+/* for positions, (x, y) */
 #define X 0
 #define Y 1
 
@@ -159,7 +159,7 @@ void snake_init(void) {
 
 	/* snake */
 	snake_len = START_SNAKE_LEN;
-	snake_head[X] =  SCREEN_WIDTH / 2;
+	snake_head[X] = SCREEN_WIDTH / 2;
 	snake_head[Y] = SCREEN_HEIGHT / 2;
 
 	snake_body = malloc(snake_len * sizeof(int *));
@@ -174,7 +174,7 @@ void snake_init(void) {
 	}
 
 	/* food and bonus */
-	food[X] = snake_rand(0,  SCREEN_WIDTH - 1);
+	food[X] = snake_rand(0, SCREEN_WIDTH - 1);
 	food[Y] = snake_rand(0, SCREEN_HEIGHT - 1);
 
 	bonus[X] = -1;
@@ -294,10 +294,14 @@ void shift_snake(void) {
 } /* shift_snake() */
 
 int in_snake(int x, int y) {
+	if(snake_head[X] == x && snake_head[Y] == y)
+		return true;
+
 	int i;
-	for(i = 0; i < snake_len; i++)
+	for(i = 0; i < snake_len; i++) {
 		if(snake_body[i][X] == x && snake_body[i][Y] == y)
 			return true;
+	}
 
 	return false;
 } /* in_snake() */
@@ -322,8 +326,7 @@ void snake_update(void) {
 	/* check if snake intersects body -- and quit appropriately */
 	int i;
 	for(i = 1; i < snake_len; i++) {
-		if(snake_head[X] == snake_body[i][X] &&
-		   snake_head[Y] == snake_body[i][Y]) {
+		if(snake_head[X] == snake_body[i][X] && snake_head[Y] == snake_body[i][Y]) {
 			quit = true;
 			return;
 		}
@@ -349,8 +352,7 @@ void snake_update(void) {
 	}
 
 	/* check if food has been eaten */
-	if(snake_head[X] == food[X] &&
-	   snake_head[Y] == food[Y]) {
+	if(snake_head[X] == food[X] && snake_head[Y] == food[Y]) {
 		/* update score */
 		score += FOOD_SCORE;
 
@@ -367,14 +369,13 @@ void snake_update(void) {
 
 		/* regenerate food */
 		do {
-			food[X] = snake_rand(0,  SCREEN_WIDTH - 1);
+			food[X] = snake_rand(0, SCREEN_WIDTH - 1);
 			food[Y] = snake_rand(0, SCREEN_HEIGHT - 1);
 		} while(in_snake(food[X], food[Y]) || (food[X] == bonus[X] && food[Y] == bonus[Y]));
 	}
 
 	/* if snake eats bonus */
-	if(snake_head[X] == bonus[X] &&
-	   snake_head[Y] == bonus[Y]) {
+	if(snake_head[X] == bonus[X] && snake_head[Y] == bonus[Y]) {
 		/* update score */
 		score += BONUS_SCORE;
 
@@ -385,8 +386,7 @@ void snake_update(void) {
 	}
 
 	/* updating bonus */
-	if(bonus[X] >= 0 &&
-	   bonus[Y] >= 0) {
+	if(bonus[X] >= 0 && bonus[Y] >= 0) {
 		/* decrement bonus timer */
 		timer--;
 
@@ -396,13 +396,12 @@ void snake_update(void) {
 			bonus[Y] = -1;
 			timer = -1;
 		}
-
 	} else {
 		/* no bonus -- randomly generate */
 		if(snake_rand(0, BONUS_CHANCE) == BONUS_CHANCE / 2) {
 			/* add bonus */
 			do {
-				bonus[X] = snake_rand(0,  SCREEN_WIDTH - 1);
+				bonus[X] = snake_rand(0, SCREEN_WIDTH - 1);
 				bonus[Y] = snake_rand(0, SCREEN_HEIGHT - 1);
 			} while(in_snake(bonus[X], bonus[Y]) || (bonus[X] == food[X] && bonus[Y] == food[Y]));
 
@@ -417,9 +416,11 @@ void snake_update(void) {
 
 	/* clear */
 	int x, y;
-	for(y = 0; y < SCREEN_HEIGHT; y++)
-		for(x = 0; x < SCREEN_WIDTH; x++)
+	for(y = 0; y < SCREEN_HEIGHT; y++) {
+		for(x = 0; x < SCREEN_WIDTH; x++) {
 			game_state[y][x] = ' ';
+		}
+	}
 
 	/* add snake body */
 	for(i = 1; i < snake_len; i++) {
